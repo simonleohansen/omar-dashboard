@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Omar Gruppen — Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f5f7;--surface:#ffffff;--surface2:#f0f0f2;
+  --text:#1a1a2e;--muted:#666677;--border:rgba(0,0,0,0.10);
+  --omar:#444;--safari:#444;--lamar:#444;--kima:#444;
+  --good:#1D9E75;--bad:#D85A30;
+}
+
+/* ── LOGIN OVERLAY ───────────────────────────────────── */
+#login-overlay{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  z-index:9999;
+}
+.login-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:2.5rem;width:340px;text-align:center;
+}
+.login-logo{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px}
+.login-logo span{opacity:.4;font-weight:400}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:2rem}
+.login-input{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:10px 14px;font-size:15px;color:var(--text);
+  margin-bottom:12px;outline:none;letter-spacing:2px;text-align:center;
+}
+.login-input:focus{border-color:var(--omar)}
+.login-btn{
+  width:100%;background:var(--omar);border:none;border-radius:8px;
+  padding:10px;font-size:14px;font-weight:600;color:#fff;cursor:pointer;
+}
+.login-btn:hover{opacity:.85}
+.login-error{font-size:13px;color:var(--bad);margin-top:10px;min-height:18px}
+
+/* ── HOVED-APP ───────────────────────────────────────── */
+#app{display:none}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px}
+header{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:.9rem 1.5rem;display:flex;align-items:center;
+  justify-content:space-between;flex-wrap:wrap;gap:10px;
+  position:sticky;top:0;z-index:100;
+}
+.logo{font-size:17px;font-weight:700;color:var(--text)}
+.logo span{opacity:.4;font-weight:400}
+.header-right{display:flex;gap:8px;align-items:center}
+.fb{background:var(--omar);border:none;border-radius:6px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;color:#fff}
+.fb:disabled{opacity:.4;cursor:not-allowed}
+.logout-btn{background:transparent;border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:12px;color:var(--muted);cursor:pointer}
+.logout-btn:hover{color:var(--text);border-color:rgba(0,0,0,.2)}
+
+main{padding:1.2rem 1.5rem;max-width:1600px;margin:0 auto}
+.status{font-size:12px;color:var(--muted);margin-bottom:1.2rem;display:flex;align-items:center;gap:8px;min-height:18px}
+.spinner{width:13px;height:13px;border:2px solid var(--border);border-top-color:var(--muted);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.section-title{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:1.8rem 0 .9rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin-bottom:1.2rem}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.9rem}
+.kpi-label{font-size:10px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px}
+.kpi-value{font-size:20px;font-weight:700;color:var(--text);line-height:1.1}
+.kpi-sub{font-size:11px;margin-top:4px}
+.up{color:var(--good)}.down{color:var(--bad)}.neu{color:var(--muted)}
+
+.period-tabs{display:flex;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:3px;width:fit-content;margin-bottom:1.2rem}
+.ptab{padding:5px 16px;border-radius:5px;font-size:13px;cursor:pointer;color:var(--muted);border:none;background:transparent;transition:all .15s}
+.ptab.active{background:var(--surface2);color:var(--text);font-weight:500;border:1px solid var(--border)}
+
+/* SameSystem-stil tabel */
+.ss-tabel{width:100%;border-collapse:collapse;font-size:13px}
+.ss-tabel th{text-align:right;font-size:10px;color:var(--muted);font-weight:500;padding:0 10px 8px;white-space:nowrap}
+.ss-tabel th:first-child{text-align:left}
+.ss-tabel td{padding:9px 10px;border-top:1px solid var(--border);text-align:right;white-space:nowrap}
+.ss-tabel td:first-child{text-align:left;font-weight:600}
+.ss-tabel tr.sum td{font-weight:700;border-top:2px solid rgba(0,0,0,.10);background:rgba(0,0,0,.03)}
+.ss-tabel tr:hover td{background:rgba(0,0,0,.02)}
+.rest-nm{display:flex;align-items:center;gap:7px}
+.dot{display:none}
+.idx{font-weight:700}.idx-up{color:var(--good)}.idx-down{color:var(--bad)}
+
+/* Restaurant-kort med mini-bars */
+.four-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin-bottom:.8rem}
+.rest-card{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:1.1rem}
+.rest-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.9rem;padding-bottom:.9rem;border-bottom:1px solid var(--border)}
+.rest-card-name{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px}
+.rest-card-right{text-align:right}
+.rest-card-total{font-size:20px;font-weight:700;color:var(--text)}
+.rest-card-delta{font-size:11px;font-weight:600;margin-top:2px}
+.rest-card-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.bar-row{display:flex;align-items:center;gap:7px;margin-bottom:4px}
+.bar-row.cur .bl,.bar-row.cur .bv{color:var(--text);font-weight:600}
+.bl{color:var(--muted);width:60px;flex-shrink:0;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt{flex:1;background:rgba(0,0,0,.06);border-radius:3px;height:12px;overflow:hidden}
+.bf{height:100%;border-radius:3px}
+.bv{color:var(--muted);width:78px;text-align:right;flex-shrink:0;font-size:10px}
+.gns-sep{display:flex;align-items:center;gap:7px;margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:1.3rem;margin-bottom:.8rem;overflow-x:auto}
+table.dag{width:100%;border-collapse:collapse;font-size:12px}
+table.dag th{text-align:left;font-size:10px;color:var(--muted);font-weight:500;padding:0 7px 8px;white-space:nowrap}
+table.dag th.r,table.dag td.r{text-align:right}
+table.dag td{padding:6px 7px;border-top:1px solid var(--border);white-space:nowrap}
+table.dag tr:hover td{background:rgba(0,0,0,.02)}
+table.dag tr.hl td{background:rgba(0,0,0,.04);font-weight:600}
+table.dag tr.sum td{font-weight:700;border-top:2px solid rgba(0,0,0,.10);background:rgba(0,0,0,.03)}
+table.gen{width:100%;border-collapse:collapse;font-size:12px}
+table.gen th{text-align:right;font-size:10px;color:var(--muted);font-weight:500;padding:0 7px 8px;white-space:nowrap}
+table.gen th:first-child,table.gen th:nth-child(2){text-align:left}
+table.gen td{padding:7px;border-top:1px solid var(--border);text-align:right;white-space:nowrap}
+table.gen td:first-child,table.gen td:nth-child(2){text-align:left}
+table.gen tr.hl td{background:rgba(0,0,0,.04);font-weight:600}
+table.gen tr:hover td{background:rgba(0,0,0,.02)}
+
+@media(max-width:700px){
+  main{padding:.8rem}
+  .four-grid{grid-template-columns:1fr}
+  .kpi-row{grid-template-columns:1fr 1fr}
+}
+/* Restaurant dag-for-dag view */
+table.rv{width:100%;border-collapse:collapse;font-size:12px}
+table.rv th{text-align:right;font-size:10px;color:var(--muted);font-weight:600;padding:0 8px 8px;white-space:nowrap;letter-spacing:.04em}
+table.rv th:first-child{text-align:left;width:50px}
+table.rv td{padding:6px 8px;border-top:1px solid var(--border);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+table.rv td:first-child{text-align:left;font-weight:500}
+table.rv tr:hover td{background:rgba(0,0,0,.02)}
+table.rv tr.uge-sum td{background:rgba(0,0,0,.03);font-weight:700;font-size:11px;color:var(--muted);border-top:1px solid rgba(0,0,0,.10)}
+table.rv tr.uge-sum td:first-child{color:#8888bb}
+table.rv tr.today-row td{background:rgba(0,0,0,.05);font-weight:600}
+.rv-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:8px}
+.rv-name{font-size:20px;font-weight:700;display:flex;align-items:center;gap:10px}
+.maaned-select{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:13px;color:var(--text);cursor:pointer;outline:none}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ─────────────────────────────────────────── -->
+<div id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">OMAR <span>GRUPPEN</span></div>
+    <div class="login-sub">Indtast adgangskode for at fortsætte</div>
+    <input class="login-input" type="password" id="pw-input" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter')tjekPw()">
+    <button class="login-btn" onclick="tjekPw()">Log ind</button>
+    <div class="login-error" id="pw-fejl"></div>
+  </div>
+</div>
+
+<!-- ── APP ───────────────────────────────────────────── -->
+<div id="app">
+  <header>
+    <div class="logo">OMAR <span>GRUPPEN</span></div>
+    <div class="header-right">
+      <div id="status" style="margin:0;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px">
+        <div class="spinner" id="load-spinner" style="display:none"></div>
+        <span id="status-txt">Indlæser…</span>
+        <span style="color:var(--muted);opacity:0.4;font-size:10px;margin-left:4px">v2.4</span>
+      </div>
+      <div id="refresh-countdown" style="font-size:11px;color:var(--muted);display:none">
+        Opdaterer om <span id="countdown-tal">30:00</span>
+      </div>
+      <button class="fb" id="fb" onclick="hentAlt(true)">↻ Opdater</button>
+      <button class="logout-btn" onclick="logUd()">Log ud</button>
+    </div>
+  </header>
+  <main>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.2rem;align-items:center">
+      <div class="period-tabs" style="margin-bottom:0">
+        <button class="ptab active" onclick="skift('dag',this)">Dag</button>
+        <button class="ptab" onclick="skift('uge',this)">Uge</button>
+        <button class="ptab" onclick="skift('maaned',this)">Måned</button>
+      </div>
+      <div style="width:1px;height:28px;background:var(--border)"></div>
+      <div class="period-tabs" style="margin-bottom:0" id="rest-tabs">
+        <button class="ptab" onclick="skift('omar',this)" style="color:#7F77DD">OMAR</button>
+        <button class="ptab" onclick="skift('safari',this)" style="color:#1D9E75">Safari</button>
+        <button class="ptab" onclick="skift('lamar',this)" style="color:#D85A30">Lamar</button>
+        <button class="ptab" onclick="skift('kima',this)" style="color:#BA7517">Kima</button>
+      </div>
+    </div>
+    <div id="v-dag"></div>
+    <div id="v-uge" style="display:none"></div>
+    <div id="v-maaned" style="display:none"></div>
+    <div id="v-omar" style="display:none"></div>
+    <div id="v-safari" style="display:none"></div>
+    <div id="v-lamar" style="display:none"></div>
+    <div id="v-kima" style="display:none"></div>
+  </main>
+</div>
+
+<script>/* LUKKEDAGE_V1_2026 */
+// ══════════════════════════════════════════════════════════
+// KONFIGURATION — skift password og proxy-URL her
+// ══════════════════════════════════════════════════════════
+const CONFIG = {
+  // Sæt dit ønskede password her:
+  PASSWORD: "omar2026",
+
+  // Din Vercel proxy-URL:
+  PROXY: "https://omar-dashboard-seven.vercel.app/api/sales",
+
+  // Easytable reservations proxy:
+  EASY: "https://omar-dashboard-seven.vercel.app/api/easytable",
+
+  // Session-varighed i timer (brugeren forbliver logget ind):
+  SESSION_TIMER: 12,
+
+  // Automatisk opdateringsinterval i minutter:
+  REFRESH_INTERVAL: 30
+};
+
+// ══════════════════════════════════════════════════════════
+// RESTAURANTER
+// ══════════════════════════════════════════════════════════
+const R = [
+  {name:'OMAR',  firmaid:13438, token:'e97ee86e7d88c54c1ca3d0b5b5eed3c95a4eda0d05a448958ebde5e80d9c6ba9', c:'#7F77DD', lukket:[]},
+  {name:'Safari',firmaid:12510, token:'628633d366d5a569c91116ed0ae281db5402755f298d8ebf07691c19107ce587', c:'#1D9E75', lukket:[0]},
+  {name:'Lamar', firmaid:15123, token:'f6b5780221629ae89c5e47873cfbbc93dda6da2873a7aed283da3c01ae558ac3', c:'#D85A30', lukket:[0]},
+  {name:'Kima',  firmaid:18089, token:'1504ee0a3000257fe676b37c66edf37feb2a3a592829c84a31f7e428b1073b17', c:'#BA7517', lukket:[]}
+];
+// lukket: array af ugedagsnumre hvor restauranten holder lukket
+// 0=søndag, 1=mandag, ... 6=lørdag (JavaScript Date.getDay() format)
+
+// Hjælpefunktion: er en restaurant åben på en given dato?
+function erAaben(rest, dato) {
+  const dagNr = new Date(dato+'T12:00:00').getDay();
+  return !rest.lukket.includes(dagNr);
+}
+
+// Restauranter der er planlagt åbne på en dato
+function aabneRestPaaDato(dato) {
+  return R.filter(r => erAaben(r, dato));
+}
+
+
+
+const DAGE  = ['Søn','Man','Tir','Ons','Tor','Fre','Lør'];
+const MNED  = ['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+let cache         = {};   // dato -> {restName -> kr}
+let cacheIFjor    = {};   // dato (i år nøgle) -> {restName -> kr} fra forrige år (ugedag-mappet)
+let cacheDatoFjor = {};   // dato (i år nøgle) -> {restName -> kr} fra forrige år (kalender-dato)
+let paxCache      = {};   // dato -> {restName -> gæster}
+let paxIFjor      = {};   // dato (i år nøgle) -> {restName -> gæster} fra forrige år
+let easyCache  = {};   // dato -> {restName -> {reservationer, gaester, ankomstTider}}
+let easySummer = {};   // restName -> {sum over periode}
+
+// ── LOGIN ────────────────────────────────────────────────
+function tjekPw() {
+  const val = document.getElementById('pw-input').value;
+  if (val === CONFIG.PASSWORD) {
+    sessionStorage.setItem('og_auth', Date.now().toString());
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    startApp();
+  } else {
+    document.getElementById('pw-fejl').textContent = 'Forkert adgangskode — prøv igen';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+
+function logUd() {
+  sessionStorage.removeItem('og_auth');
+  clearInterval(window._refreshTimer);
+  clearInterval(window._countdownTimer);
+  location.reload();
+}
+
+// Tjek om session stadig er gyldig — start app automatisk
+document.addEventListener('DOMContentLoaded', function() {
+  const ts = sessionStorage.getItem('og_auth');
+  if (ts && (Date.now() - parseInt(ts)) < CONFIG.SESSION_TIMER * 3600000) {
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    startApp();
+  }
+});
+
+// ── AUTO-OPDATERING ──────────────────────────────────────
+function startApp() {
+  // Hent data og start countdown når det er færdigt
+  hentAlt().then(() => startCountdown());
+
+  // Sæt auto-opdatering op
+  clearInterval(window._refreshTimer);
+  window._refreshTimer = setInterval(() => {
+    hentAlt().then(() => startCountdown());
+  }, CONFIG.REFRESH_INTERVAL * 60 * 1000);
+}
+
+function startCountdown() {
+  clearInterval(window._countdownTimer);
+  const el = document.getElementById('countdown-tal');
+  const wrapper = document.getElementById('refresh-countdown');
+  let sek = CONFIG.REFRESH_INTERVAL * 60;
+  wrapper.style.display = 'flex';
+  window._countdownTimer = setInterval(() => {
+    sek--;
+    if (sek <= 0) { clearInterval(window._countdownTimer); return; }
+    const m = Math.floor(sek / 60), s = sek % 60;
+    el.textContent = m + ':' + String(s).padStart(2, '0');
+  }, 1000);
+}
+
+// ── HJÆLPEFUNKTIONER ────────────────────────────────────
+function kr(n)     { if (!n || n===0) return '—'; return Math.round(n).toLocaleString('da-DK')+' kr.' }
+function krF(n)    { if (!n || n===0) return '0 kr.'; return Math.round(n).toLocaleString('da-DK')+' kr.' }
+function pct(v,r)  { if (!r) return ''; const p=(v-r)/r*100; return (p>=0?'+':'')+p.toFixed(1)+'%' }
+function cls(v,r)  { return v>=r ? 'up' : 'down' }
+function idxHtml(v,f) {
+  if (!f||f===0) return '<span class="neu">—</span>';
+  const i=Math.round(v/f*100), c=i>=100?'idx-up':'idx-down', a=i>=100?'▲':'▼';
+  return `<span class="idx ${c}">${i} ${a}</span>`;
+}
+
+function ls(off=0) { const d=new Date(); d.setDate(d.getDate()+off); return d.toLocaleDateString('sv-SE') }
+function fjor(dato){ const d=new Date(dato+'T12:00:00'); d.setFullYear(d.getFullYear()-1); return d.toLocaleDateString('sv-SE') }
+function man(off=0){ const d=new Date(); d.setDate(d.getDate()+off); const w=d.getDay()||7; d.setDate(d.getDate()-w+1); return d.toLocaleDateString('sv-SE') }
+function mS(off=0) { const d=new Date(); d.setMonth(d.getMonth()+off,1); return d.toLocaleDateString('sv-SE') }
+function mE(off=0) { const d=new Date(); d.setMonth(d.getMonth()+off+1,0); return d.toLocaleDateString('sv-SE') }
+function dr(a,b)   { if(a>b)return[]; const r=[],c=new Date(a+'T12:00:00'),e=new Date(b+'T12:00:00'); while(c<=e){r.push(c.toLocaleDateString('sv-SE'));c.setDate(c.getDate()+1);} return r }
+function wn(s)     { const d=new Date(s+'T12:00:00'); d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7)); return Math.ceil((((d-new Date(Date.UTC(d.getUTCFullYear(),0,1)))/864e5)+1)/7) }
+
+// ── ISO-UGE + UGEDAG MAPPING (sammenlign samme ugedag forrige år) ──
+function isoUgeNr(d) { const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7)); return Math.ceil((((t-new Date(Date.UTC(t.getUTCFullYear(),0,1)))/864e5)+1)/7) }
+function isoAarNr(d) { const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7)); return t.getUTCFullYear() }
+function _isoMap(dato, aarOffset) {
+  const dt=new Date(dato+'T12:00:00'), uge=isoUgeNr(dt), isoAar=isoAarNr(dt)+aarOffset, off=(dt.getDay()||7)-1;
+  const jan4=new Date(Date.UTC(isoAar,0,4)), man1=new Date(jan4);
+  man1.setUTCDate(jan4.getUTCDate()-(jan4.getUTCDay()||7)+1);
+  const res=new Date(man1); res.setUTCDate(man1.getUTCDate()+(uge-1)*7+off);
+  return res.toLocaleDateString('sv-SE');
+}
+// Kortlæg dato fra forrige år til tilsvarende ugedag i år
+function mapFjorTilIaar(dato) { return _isoMap(dato, +1) }
+// Kortlæg dato fra i år til tilsvarende ugedag forrige år
+function mapIaarTilFjor(dato) { return _isoMap(dato, -1) }
+
+function gt(dato,rn,c)    { return (c||cache)[dato]?.[rn]||0 }
+function etG(dato,rn)     { return easyCache[dato]?.[rn]?.gaester||0 }         // Easytable gæster
+function etGA(dato)       { return R.reduce((s,r)=>s+etG(dato,r.name),0) }     // Alle gæster
+function etR(dato,rn)     { return easyCache[dato]?.[rn]?.reservationer||0 }   // Reservationer pr. rest.
+function etB(dato,rn)     { return easyCache[dato]?.[rn]?.reservationer||0 }   // Alias for etR
+function etBA(dato)       { return R.reduce((s,r)=>s+etB(dato,r.name),0) }     // Alle reservationer
+function etNS(dato,rn)    { return easyCache[dato]?.[rn]?.noShows||0 }         // No-shows pr. rest.
+function gtA(dato,c)      { return R.reduce((s,r)=>s+gt(dato,r.name,c),0) }
+function pax(dato,rn)      { return paxCache[dato]?.[rn]||0 }
+function paxA(dato)        { return R.reduce((s,r)=>s+pax(dato,r.name),0) }
+function paxF(dato,rn)     { return paxIFjor[dato]?.[rn]||0 }
+function paxFA(dato)       { return R.reduce((s,r)=>s+paxF(dato,r.name),0) }
+function spend(dato,rn)    { const p=pax(dato,rn); return p>0 ? gt(dato,rn)/p : 0 }
+function spendA(dato)      { const p=paxA(dato); return p>0 ? gtA(dato)/p : 0 }
+function spendF(dato,rn)   { const p=paxF(dato,rn); return p>0 ? gt(dato,rn,cacheIFjor)/p : 0 }
+function krRound(n)       { if(!n||n===0) return '—'; return Math.round(n).toLocaleString('da-DK')+' kr.' }
+
+// ── HENT DATA ────────────────────────────────────────────
+async function hentAlt(manuel=false) {
+  document.getElementById('fb').disabled = true;
+  document.getElementById('load-spinner').style.display = 'inline-block';
+  document.getElementById('status-txt').textContent = manuel ? 'Opdaterer…' : 'Indlæser…';
+  cache = {}; cacheIFjor = {}; cacheDatoFjor = {}; paxCache = {}; paxIFjor = {}; easyCache = {};
+
+  const idag=ls(0), fra=ls(-89);
+  const fraF=fjor(fra), tilF=fjor(idag);
+  const histUrl = CONFIG.PROXY.replace('/api/sales', '/api/historical-sales');
+
+  // ISO-uge mapning er nu globale funktioner: mapFjorTilIaar / mapIaarTilFjor
+
+  // ── STEP 1: Historisk data fra Supabase (hurtigt — 2 kald i stedet for 8) ──
+  try {
+    const [histResp, histFjorResp] = await Promise.all([
+      fetch(histUrl + '?from=' + fra + '&to=' + ls(-1)),
+      fetch(histUrl + '?from=' + fraF + '&to=' + tilF)
+    ]);
+    const hist = await histResp.json();
+    const histFjor = await histFjorResp.json();
+
+    // I år: fyld cache + paxCache fra Supabase
+    if (hist.data) {
+      for (const [dato, rests] of Object.entries(hist.data)) {
+        if (!cache[dato]) cache[dato] = {};
+        if (!paxCache[dato]) paxCache[dato] = {};
+        for (const [restNavn, vals] of Object.entries(rests)) {
+          cache[dato][restNavn] = vals.omsaetning;
+          paxCache[dato][restNavn] = vals.pax;
+        }
+      }
+    }
+
+    // Forrige år: map til i år via ISO-uge og fyld cacheIFjor + paxIFjor
+    // Fyld også cacheDatoFjor med kalender-dato mapping (præcis 1 år frem)
+    if (histFjor.data) {
+      for (const [dato, rests] of Object.entries(histFjor.data)) {
+        const ugedagNøgle = mapFjorTilIaar(dato);
+        const datoNøgle = (() => { const d=new Date(dato+'T12:00:00'); d.setFullYear(d.getFullYear()+1); return d.toLocaleDateString('sv-SE'); })();
+        if (!cacheIFjor[ugedagNøgle]) cacheIFjor[ugedagNøgle] = {};
+        if (!paxIFjor[ugedagNøgle]) paxIFjor[ugedagNøgle] = {};
+        if (!cacheDatoFjor[datoNøgle]) cacheDatoFjor[datoNøgle] = {};
+        for (const [restNavn, vals] of Object.entries(rests)) {
+          cacheIFjor[ugedagNøgle][restNavn] = (cacheIFjor[ugedagNøgle][restNavn]||0) + vals.omsaetning;
+          paxIFjor[ugedagNøgle][restNavn] = vals.pax;
+          cacheDatoFjor[datoNøgle][restNavn] = vals.omsaetning;
+        }
+      }
+    }
+    console.log('Supabase historisk: '+Object.keys(cache).length+' dage i år, '+Object.keys(cacheIFjor).length+' dage forrige år');
+  } catch(e) { console.warn('Supabase historisk fejl:', e); }
+
+  // ── STEP 2: Live data fra OnlinePOS (kun i dag — hurtigt!) ──
+  await Promise.all(R.map(async r => {
+    try {
+      const r1 = await fetch(CONFIG.PROXY, {method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({firmaid:r.firmaid,token:r.token,fromDate:idag,toDate:idag})});
+      const d1 = await r1.json();
+      if (d1.sales) for (const it of d1.sales) {
+        const l=it.line||it;
+        const m=(l.date||'').match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+        if (!m) continue;
+        const d=m[3]+'-'+m[2]+'-'+m[1];
+        const v=parseFloat((l.price||'0').toString().replace(',','.'))||0;
+        if(v!==0){if(!cache[d])cache[d]={};cache[d][r.name]=(cache[d][r.name]||0)+v;}
+        const px=parseInt(l.pax)||0,chk=String(l.chk||'');
+        if(px>0&&chk){
+          if(!paxCache[d])paxCache[d]={};
+          const rk=r.name+'_cx';
+          if(!paxCache[d][rk])paxCache[d][rk]={};
+          if((paxCache[d][rk][chk]||0)<px){
+            paxCache[d][rk][chk]=px;
+            paxCache[d][r.name]=Object.values(paxCache[d][rk]).reduce((a,b)=>a+b,0);
+          }
+        }
+      }
+    } catch(e) { console.warn(r.name, 'live', e) }
+  }));
+
+
+
+  // Hent reservationsdata fra Supabase (hurtigere og mere pålideligt end Easytable API)
+  try {
+    const etDatoer = new Set();
+    etDatoer.add(ls(-1));
+    const _d1 = new Date(ls(-1)+'T12:00:00');
+    for(let w=1;w<=5;w++){_d1.setDate(_d1.getDate()-7);etDatoer.add(_d1.toLocaleDateString('sv-SE'));}
+    etDatoer.add(ls(0));
+    const _d2 = new Date(ls(0)+'T12:00:00');
+    for(let w=1;w<=5;w++){_d2.setDate(_d2.getDate()-7);etDatoer.add(_d2.toLocaleDateString('sv-SE'));}
+    const resUrl = CONFIG.PROXY.replace('/api/sales','/api/reservationer')
+      + '?dates=' + [...etDatoer].sort().join(',');
+    console.log('Reservationer URL:', resUrl);
+    const etResp = await fetch(resUrl);
+    const etData = await etResp.json();
+    console.log('Reservationer response:', etData.count, 'rows');
+    if (etData.restauranter) {
+      for (const [restNavn, datoer] of Object.entries(etData.restauranter)) {
+        for (const [dato, data] of Object.entries(datoer)) {
+          if (!easyCache[dato]) easyCache[dato] = {};
+          easyCache[dato][restNavn] = data;
+        }
+      }
+    }
+  } catch(e) { console.error('Reservationer fejl:', e); }
+
+  document.getElementById('load-spinner').style.display = 'none';
+  document.getElementById('status-txt').textContent = 'Opdateret ' + new Date().toLocaleTimeString('da-DK');
+  document.getElementById('fb').disabled = false;
+
+  // Genbyg aktivt view
+  const aktivTab = document.querySelector('.ptab.active');
+  if (aktivTab) {
+    const txt = aktivTab.textContent.trim();
+    if (txt === 'Uge')         bygUge();
+    else if (txt === 'Måned')  await bygMaaned();
+    else if (txt === 'OMAR')   await bygRestView('OMAR','#7F77DD','omar');
+    else if (txt === 'Safari') await bygRestView('Safari','#1D9E75','safari');
+    else if (txt === 'Lamar')  await bygRestView('Lamar','#D85A30','lamar');
+    else if (txt === 'Kima')   await bygRestView('Kima','#BA7517','kima');
+    else bygDag();
+  } else { bygDag(); }
+}
+
+function skift(v,btn) {
+  document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Sæt aktiv farve for restaurant-faner
+  const restFarver={omar:'#7F77DD',safari:'#1D9E75',lamar:'#D85A30',kima:'#BA7517'};
+  if(restFarver[v]){
+    btn.style.color=restFarver[v];
+    btn.style.background='var(--surface2)';
+    btn.style.borderColor='rgba(0,0,0,.10)';
+  }
+  ['dag','uge','maaned','omar','safari','lamar','kima'].forEach(x=>{
+    document.getElementById('v-'+x).style.display=x===v?'block':'none';
+  });
+  if (v==='dag')    bygDag();
+  if (v==='uge')    bygUge();
+  if (v==='maaned') bygMaaned(); // async — UI opdateres asynkront
+  if (v==='omar')   bygRestView('OMAR','#7F77DD','omar');
+  if (v==='safari') bygRestView('Safari','#1D9E75','safari');
+  if (v==='lamar')  bygRestView('Lamar','#D85A30','lamar');
+  if (v==='kima')   bygRestView('Kima','#BA7517','kima');
+  // Note: bygRestView er async — kald uden await er OK her da UI opdateres asynkront
+}
+
+// ── DAG VIEW ─────────────────────────────────────────────
+function bygDag() {
+  const igaar=ls(-1), dn=new Date(igaar+'T12:00:00').getDay(), ud=DAGE[dn];
+  const prev5=[]; let d=new Date(igaar+'T12:00:00');
+  while (prev5.length<5) { d.setDate(d.getDate()-7); const s=d.toLocaleDateString('sv-SE'); if(s>=ls(-89))prev5.push(s); if(d<new Date(ls(-89)+'T12:00:00'))break; }
+  // Kun planlagt åbne restauranter i går
+  const aabne=aabneRestPaaDato(igaar);
+  const totI=aabne.reduce((s,r)=>s+gt(igaar,r.name),0);
+  const totF=aabne.reduce((s,r)=>s+gt(igaar,r.name,cacheIFjor),0);
+  const sn5=prev5.length?aabne.reduce((s,r)=>{
+    const pv=prev5.filter(d=>erAaben(r,d)).map(x=>gt(x,r.name)).filter(v=>v>0);
+    return s+(pv.length?pv.reduce((a,b)=>a+b,0)/pv.length:0);
+  },0):0;
+  const bedste=R.slice().sort((a,b)=>gt(igaar,b.name)-gt(igaar,a.name))[0];
+
+  // Easytable: gæster i går og gennemsnit samme ugedag
+  const etIdag=etGA(igaar);
+  console.log('bygDag: igaar='+igaar+' etIdag='+etIdag+' easyCache[igaar]=', easyCache[igaar], 'etError=', window._etError);
+  const etPrev5=prev5.map(d=>etGA(d)).filter(v=>v>0);
+  const etGns=etPrev5.length?Math.round(etPrev5.reduce((a,b)=>a+b,0)/etPrev5.length):0;
+  const etIdxCls=etGns>0?(etIdag>=etGns?'up':'down'):'neu';
+  const etPct=etGns>0?((etIdag-etGns)/etGns*100):null;
+
+  let h=`<div class="section-title">I GÅR — ${ud.toUpperCase()} ${igaar}</div>`;
+  h+=`<div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">Gæster i går (reserveret)</div>
+      <div class="kpi-value ${etIdxCls}">${etIdag||'—'}</div>
+      <div class="kpi-sub ${etIdxCls}">${etPct!==null?(etPct>=0?'+':'')+etPct.toFixed(1)+'% vs. gns. '+ud:etGns?'Gns: '+etGns:''}</div>
+    </div>
+    <div class="kpi"><div class="kpi-label">Total i går</div><div class="kpi-value">${krF(totI)}</div><div class="kpi-sub ${cls(totI,sn5)}">${pct(totI,sn5)} vs. gns. ${ud}</div></div>
+    <div class="kpi"><div class="kpi-label">Samme ugedag forrige år (${mapIaarTilFjor(igaar)})</div><div class="kpi-value">${krF(totF)}</div><div class="kpi-sub">Index vs. forrige år: <span class="${cls(totI,totF)}">${totF?Math.round(totI/totF*100):'—'}</span></div></div>
+    <div class="kpi"><div class="kpi-label">Gns. omsætning pr. ${ud} (seneste 5 uger)</div><div class="kpi-value">${krF(sn5)}</div></div>
+    <div class="kpi"><div class="kpi-label">Bedste restaurant i går</div><div class="kpi-value" style="font-size:17px">${bedste.name}</div><div class="kpi-sub">${krF(gt(igaar,bedste.name))}</div></div>
+    <div class="kpi"><div class="kpi-label">Restauranter over gns. ${ud}</div><div class="kpi-value">${R.filter(r=>{const s=prev5.length?prev5.reduce((x,d2)=>x+gt(d2,r.name),0)/prev5.length:0;return gt(igaar,r.name)>s}).length} / 4</div></div>
+  </div>`;
+
+  // SameSystem-tabel
+  h+=`<div class="section-title">OMSÆTNING PR. RESTAURANT — SAMMENLIGNING MED GENNEMSNIT OG FORRIGE ÅR</div><div class="card"><table class="ss-tabel"><thead><tr>
+    <th>Afdeling</th><th>Salg i går</th><th>Gns. samme ${ud} (5 uger)</th><th>Difference</th><th>Index vs. gns.</th><th>Samme ugedag forrige år</th><th>Index vs. forrige år</th>
+  </tr></thead><tbody>`;
+  for (const r of R) {
+    const v=gt(igaar,r.name), pv=prev5.map(x=>gt(x,r.name));
+    const sn=pv.length?pv.reduce((a,b)=>a+b,0)/pv.length:0, fV=gt(igaar,r.name,cacheIFjor), diff=v-sn;
+    h+=`<tr><td><span class="rest-nm"><span class="dot" style="background:${r.c}"></span>${r.name}</span></td>
+      <td style="font-weight:700">${krF(v)}</td><td>${kr(sn)}</td>
+      <td class="${diff>=0?'up':'down'}">${diff>=0?'+':''}${kr(Math.abs(diff))}</td>
+      <td>${idxHtml(v,sn)}</td><td class="${fV>0?(v>=fV?'up':'down'):'neu'}">${kr(fV)}</td><td>${idxHtml(v,fV)}</td></tr>`;
+  }
+  // Total-række: planlagt åbne restauranter i går
+  const aabneIgaar=aabneRestPaaDato(igaar);
+  const td=aabneIgaar.reduce((s,r)=>s+gt(igaar,r.name,cacheIFjor),0);
+  const tg=aabneIgaar.reduce((s,r)=>{
+    const pv=prev5.filter(d=>erAaben(r,d)).map(x=>gt(x,r.name)).filter(v=>v>0);
+    return s+(pv.length?pv.reduce((a,b)=>a+b,0)/pv.length:0);
+  },0);
+  h+=`<tr class="sum"><td>Total</td><td style="font-weight:700">${krF(totI)}</td><td>${kr(tg)}</td>
+    <td class="${(totI-tg)>=0?'up':'down'}">${(totI-tg)>=0?'+':''}${kr(Math.abs(totI-tg))}</td>
+    <td>${idxHtml(totI,tg)}</td><td>${kr(td)}</td><td>${idxHtml(totI,td)}</td>
+  </tr></tbody></table></div>`;
+
+  // Mini-bar kort
+  h+=`<div class="section-title">I GÅR VS. DE 5 SENESTE ${ud.toUpperCase()}E — MINI-OVERSIGT PR. RESTAURANT</div><div class="four-grid">`;
+  for (const r of R) {
+    const v=gt(igaar,r.name), pv=prev5.map(x=>gt(x,r.name));
+    const sn=pv.length?pv.reduce((a,b)=>a+b,0)/pv.length:0, fV=gt(igaar,r.name,cacheIFjor);
+    const mx=Math.max(v,...pv,fV||0,1), dp=(v-sn)/Math.max(sn,1)*100;
+    let bars=bR(v,mx,r.c,'I går',true);
+    prev5.forEach(x=>bars+=bR(gt(x,r.name),mx,r.c,DAGE[new Date(x+'T12:00:00').getDay()]+' '+x.slice(5),false));
+    if(fV>0)bars+=bR(fV,mx,'rgba(0,0,0,.12)',fjor(igaar).slice(5)+' fjor',false);
+    bars+=`<div class="gns-sep"><span style="color:var(--muted);width:60px;font-size:10px">Gns.</span><div class="bt"><div class="bf" style="width:${Math.round(sn/mx*100)}%;background:rgba(0,0,0,.15)"></div></div><span style="color:var(--muted);width:78px;text-align:right;font-size:10px">${kr(sn)}</span></div>`;
+    h+=`<div class="rest-card"><div class="rest-card-top">
+      <div class="rest-card-name"><span class="dot" style="background:${r.c}"></span>${r.name}</div>
+      <div class="rest-card-right"><div class="rest-card-total">${krF(v)}</div>
+        <div class="rest-card-delta ${cls(v,sn)}">${pct(v,sn)} vs. gns. ${ud}</div>
+        <div class="rest-card-sub">Index år: <strong>${fV?Math.round(v/fV*100):'—'}</strong></div>
+      </div></div>${bars}</div>`;
+  }
+  h+='</div>';
+
+  // Dagsoversigt
+  const datoer=dr(mS(0),ls(0)); let akk=0; const rS={};R.forEach(r=>rS[r.name]=0);
+  let tb='';
+  for (const dato of datoer) {
+    const tot=gtA(dato); akk+=tot; R.forEach(r=>rS[r.name]+=gt(dato,r.name));
+    // Index: sammenlign kun planlagt åbne restauranter i år med samme i fjor
+        const aabneRest=aabneRestPaaDato(dato);
+        const totAabn=aabneRest.reduce((s,r)=>s+gt(dato,r.name),0);
+        const fTAabn=aabneRest.reduce((s,r)=>s+gt(dato,r.name,cacheIFjor),0);
+        const idx=fTAabn>0?Math.round(totAabn/fTAabn*100):null;
+    tb+=`<tr class="${dato===igaar?'hl':''}"><td>${dato}</td><td>${DAGE[new Date(dato+'T12:00:00').getDay()]}</td>
+      ${R.map(r=>`<td class="r">${kr(gt(dato,r.name))}</td>`).join('')}
+      <td class="r" style="font-weight:600">${kr(tot)}</td>
+      <td class="r ${idx===null?'neu':idx>=100?'up':'down'}">${idx!==null?idx:'—'}</td>
+      <td class="r" style="color:var(--muted)">${kr(akk)}</td></tr>`;
+  }
+  tb+=`<tr class="sum"><td colspan="2">TOTAL</td>${R.map(r=>`<td class="r">${kr(rS[r.name])}</td>`).join('')}<td class="r">${kr(akk)}</td><td class="r"></td><td class="r"></td></tr>`;
+  h+=`<div class="section-title">DAGSOVERSIGT — ${MNED[new Date().getMonth()].toUpperCase()} ${new Date().getFullYear()} (med index vs. forrige år)</div><div class="card"><table class="dag">
+    <thead><tr><th>Dato</th><th>Dag</th>${R.map(r=>`<th class="r" style="color:${r.c}">${r.name}</th>`).join('')}<th class="r">Total</th><th class="r">Index forrige år</th><th class="r">Akkumuleret (måned)</th></tr></thead>
+    <tbody>${tb}</tbody></table></div>`;
+
+
+  // ── GÆSTER & SPEND PR. GÆST ────────────────────────
+  h+=`<div class="section-title">GÆSTER & SPEND PR. GÆST — I GÅR</div>`;
+  h+=`<div class="kpi-row">`;
+  const totPaxIgaar=paxA(igaar);
+  const totSpendIgaar=totPaxIgaar>0?Math.round(gtA(igaar)/totPaxIgaar):0;
+  // Gennemsnit spend pr gæst for seneste 5 samme ugedag
+  const spendPrev5=prev5.filter(d=>paxA(d)>0).map(d=>gtA(d)/paxA(d));
+  const snitSpend=spendPrev5.length?Math.round(spendPrev5.reduce((a,b)=>a+b,0)/spendPrev5.length):0;
+  h+=`<div class="kpi"><div class="kpi-label">Gæster i går — alle restauranter</div><div class="kpi-value">${totPaxIgaar||'—'}</div></div>`;
+  h+=`<div class="kpi"><div class="kpi-label">Gns. forbrug pr. gæst i går</div><div class="kpi-value">${totSpendIgaar?Math.round(totSpendIgaar).toLocaleString('da-DK')+' kr.':'—'}</div>
+    <div class="kpi-sub ${cls(totSpendIgaar,snitSpend)}">${snitSpend?pct(totSpendIgaar,snitSpend)+' vs. gns. '+ud:''}</div></div>`;
+  h+=`<div class="kpi"><div class="kpi-label">Gns. forbrug pr. gæst (${ud}, 5 uger)</div><div class="kpi-value">${snitSpend?Math.round(snitSpend).toLocaleString('da-DK')+' kr.':'—'}</div></div>`;
+  h+=`</div>`;
+
+  // Spend pr. gæst pr. restaurant
+  // Forrige år spend
+  const totPaxFjor=paxFA(igaar);
+  const totSpendFjor=totPaxFjor>0?Math.round(gtA(igaar,cacheIFjor)/totPaxFjor):0;
+  h+=`<div class="card"><table class="ss-tabel"><thead><tr>
+    <th>Afdeling</th><th>Omsætning</th><th>Gæster</th><th>Forbrug/gæst</th><th>Gns. ${ud} (5 uger)</th><th>Forrige år/gæst</th><th>+/- vs. forrige år</th>
+  </tr></thead><tbody>`;
+  for(const r of R){
+    const rv=gt(igaar,r.name), rpx=pax(igaar,r.name), rsp=rpx>0?Math.round(rv/rpx):0;
+    const rprev=prev5.filter(d=>pax(d,r.name)>0).map(d=>gt(d,r.name)/pax(d,r.name));
+    const rsn=rprev.length?Math.round(rprev.reduce((a,b)=>a+b,0)/rprev.length):0;
+    const rFjorPx=paxF(igaar,r.name);
+    const rSpendFjor=rFjorPx>0?Math.round(gt(igaar,r.name,cacheIFjor)/rFjorPx):0;
+    const rdiffFjor=rsp&&rSpendFjor?rsp-rSpendFjor:null;
+    h+=`<tr><td><span class="rest-nm"><span class="dot" style="background:${r.c}"></span>${r.name}</span></td>
+      <td style="font-weight:700">${kr(rv)}</td>
+      <td>${rpx||'—'}</td>
+      <td style="font-weight:600">${rsp?Math.round(rsp).toLocaleString('da-DK')+' kr.':'—'}</td>
+      <td>${rsn?Math.round(rsn).toLocaleString('da-DK')+' kr.':'—'}</td>
+      <td>${rSpendFjor?Math.round(rSpendFjor).toLocaleString('da-DK')+' kr.':'—'}</td>
+      <td class="${rdiffFjor===null?'neu':rdiffFjor>=0?'up':'down'}">${rdiffFjor!==null?(rdiffFjor>=0?'+':'')+Math.round(rdiffFjor).toLocaleString('da-DK')+' kr.':'—'}</td>
+    </tr>`;
+  }
+  h+=`<tr class="sum"><td>Total</td><td style="font-weight:700">${kr(gtA(igaar))}</td>
+    <td>${totPaxIgaar||'—'}</td>
+    <td style="font-weight:600">${totSpendIgaar?Math.round(totSpendIgaar).toLocaleString('da-DK')+' kr.':'—'}</td>
+    <td>${snitSpend?Math.round(snitSpend).toLocaleString('da-DK')+' kr.':'—'}</td>
+    <td>${totSpendFjor?Math.round(totSpendFjor).toLocaleString('da-DK')+' kr.':'—'}</td>
+    <td class="${totSpendIgaar&&totSpendFjor?(totSpendIgaar-totSpendFjor)>=0?'up':'down':'neu'}">${totSpendIgaar&&totSpendFjor?((totSpendIgaar-totSpendFjor)>=0?'+':'')+Math.round(totSpendIgaar-totSpendFjor).toLocaleString('da-DK')+' kr.':'—'}</td>
+  </tr></tbody></table></div>`;
+
+  // ── RESERVATIONER FRA EASYTABLE ──────────────────────
+  const etTotG = etGA(igaar);
+  const etTotB = etBA(igaar);
+  const noShowRate = etTotB > 0 ?
+    Math.round((1 - etTotG / (etTotB * 2.5)) * 100) : null; // estimat
+
+  if (etTotG > 0 || etTotB > 0) {
+    h+=`<div class="section-title">RESERVATIONER — I GÅR (EASYTABLE)</div>`;
+    h+=`<div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">Reservationer i går</div><div class="kpi-value">${etTotB||'—'}</div></div>
+      <div class="kpi"><div class="kpi-label">Reserverede gæster</div><div class="kpi-value">${etTotG||'—'}</div><div class="kpi-sub">Fra bookingsystem</div></div>
+      <div class="kpi"><div class="kpi-label">Faktiske gæster (OnlinePOS)</div><div class="kpi-value">${totPaxIgaar||'—'}</div><div class="kpi-sub">Fra kassesystem</div></div>
+      <div class="kpi"><div class="kpi-label">Walk-ins (estimat)</div><div class="kpi-value">${totPaxIgaar&&etTotG?Math.max(0,totPaxIgaar-etTotG):'—'}</div><div class="kpi-sub">Gæster uden reservation</div></div>
+    </div>`;
+
+    // Reservation tabel pr. restaurant
+    h+=`<div class="card"><table class="ss-tabel"><thead><tr>
+      <th>Afdeling</th><th>Reservationer</th><th>Res. gæster</th><th>Frokost</th><th>Aften</th><th>Faktiske gæster</th><th>Walk-ins</th>
+    </tr></thead><tbody>`;
+    let etTotRes=0, etTotResG=0, etTotPax=0;
+    for(const r of R){
+      const res = etB(igaar,r.name);
+      const resG = etG(igaar,r.name);
+      const frokost = easyCache[igaar]?.[r.name]?.frokost||0;
+      const aften = easyCache[igaar]?.[r.name]?.aften||0;
+      const faktisk = pax(igaar,r.name);
+      const walkin = Math.max(0, faktisk - resG);
+      etTotRes+=res; etTotResG+=resG; etTotPax+=faktisk;
+      h+=`<tr><td><span class="rest-nm"><span class="dot" style="background:${r.c}"></span>${r.name}</span></td>
+        <td>${res||'—'}</td>
+        <td>${resG||'—'}</td>
+        <td style="color:var(--muted)">${frokost||'—'}</td>
+        <td style="color:var(--muted)">${aften||'—'}</td>
+        <td style="font-weight:600">${faktisk||'—'}</td>
+        <td class="${walkin>0?'up':'neu'}">${walkin>0?'+'+walkin:'—'}</td>
+      </tr>`;
+    }
+    h+=`<tr class="sum"><td>Total</td><td>${etTotRes}</td><td>${etTotResG}</td><td></td><td></td><td>${etTotPax}</td><td class="${Math.max(0,etTotPax-etTotResG)>0?'up':'neu'}">${Math.max(0,etTotPax-etTotResG)>0?'+'+Math.max(0,etTotPax-etTotResG):'—'}</td></tr>`;
+    h+=`</tbody></table></div>`;
+  }
+
+  // ── MÅNEDSMÅL-FREMSKRIVNING ─────────────────────────
+  const maanedsDatoer=dr(mS(0),ls(0));
+  const dageGaet=maanedsDatoer.length;
+  const dageIMaaned=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate();
+  const dageTilbage=dageIMaaned-dageGaet;
+  const maanedOmsNu=maanedsDatoer.reduce((s,d)=>s+gtA(d),0);
+  const dagsgns=dageGaet>0?maanedOmsNu/dageGaet:0;
+  const fremskrevet=Math.round(maanedOmsNu+dagsgns*dageTilbage);
+  // Forrige år TIL DATO (æbler med æbler)
+  const maanedFjor=maanedsDatoer.reduce((s,d)=>s+gtA(d,cacheIFjor),0);
+  // Forrige år HEL MÅNED (til fremskrivning)
+  const helMaanedFjor=dr(mS(0),mE(0)).reduce((s,d)=>s+gtA(d,cacheIFjor),0);
+  // Faktisk index: til dato vs. forrige år til dato (fair sammenligning)
+  // Faktisk index: planlagt åbne restauranter pr. dag vs. forrige år
+  const maanedOmsAabn=maanedOmsNu; // allerede korrekt
+  const maanedFjorAabn=maanedsDatoer.reduce((s,d)=>{
+    return s+aabneRestPaaDato(d).reduce((x,r)=>x+gt(d,r.name,cacheIFjor),0);
+  },0);
+  const faktiskIdx=maanedFjorAabn>0?Math.round(maanedOmsAabn/maanedFjorAabn*100):null;
+  // Fremskrevet index: estimat vs. hel måned forrige år
+  const fremskrivIdx=helMaanedFjor>0?Math.round(fremskrevet/helMaanedFjor*100):null;
+  const fremskrivPct=helMaanedFjor>0?((fremskrevet-helMaanedFjor)/helMaanedFjor*100):null;
+
+  h+=`<div class="section-title">FREMSKRIVNING — ENDER ${MNED[new Date().getMonth()].toUpperCase()} OVER ELLER UNDER FORRIGE ÅR?</div>`;
+  h+=`<div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">Omsætning til dato — ${MNED[new Date().getMonth()]} ${new Date().getFullYear()}</div>
+      <div class="kpi-value">${krF(maanedOmsNu)}</div>
+      <div class="kpi-sub">${dageGaet} af ${dageIMaaned} dage gennemført</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Faktisk index vs. forrige år (til dato)</div>
+      <div class="kpi-value ${faktiskIdx!==null?(faktiskIdx>=100?'up':'down'):'neu'}">${faktiskIdx!==null?faktiskIdx:'—'}</div>
+      <div class="kpi-sub">Sammenligner kun de ${dageGaet} dage der er gået</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Daglig gns. omsætning (denne måned)</div>
+      <div class="kpi-value">${krF(Math.round(dagsgns))}</div>
+      <div class="kpi-sub">${dageTilbage} dage tilbage i måneden</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Fremskrevet slutresultat (estimat)</div>
+      <div class="kpi-value">${krF(fremskrevet)}</div>
+      <div class="kpi-sub ${fremskrivPct!==null?(fremskrivPct>=0?'up':'down'):'neu'}">
+        ${fremskrivPct!==null?(fremskrivPct>=0?'+':'')+fremskrivPct.toFixed(1)+'% vs. forrige år hel måned':''}
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Hel måned forrige år (reference)</div>
+      <div class="kpi-value">${krF(helMaanedFjor)}</div>
+      <div class="kpi-sub">Fremskrevet index: <span class="${fremskrivIdx!==null?(fremskrivIdx>=100?'up':'down'):'neu'}">${fremskrivIdx!==null?fremskrivIdx+' (estimat)':'—'}</span></div>
+    </div>
+  </div>`;
+
+  // Fremskrivning pr. restaurant
+  h+=`<div class="card"><table class="ss-tabel"><thead><tr>
+    <th>Afdeling</th><th>Til dato</th><th>Forrige år til dato</th><th>Faktisk index</th><th>Daglig gns.</th><th>Fremskrevet (estimat)</th><th>Hel måned forrige år</th><th>Fremskrevet index</th>
+  </tr></thead><tbody>`;
+  for(const r of R){
+    const rNu=maanedsDatoer.reduce((s,d)=>s+gt(d,r.name),0);
+    const rFjorTilDato=maanedsDatoer.reduce((s,d)=>s+gt(d,r.name,cacheIFjor),0);
+    const rFaktiskIdx=rFjorTilDato>0?Math.round(rNu/rFjorTilDato*100):null;
+    const rDgns=dageGaet>0?rNu/dageGaet:0;
+    const rFrem=Math.round(rNu+rDgns*dageTilbage);
+    const rHelFjor=dr(mS(0),mE(0)).reduce((s,d)=>s+gt(d,r.name,cacheIFjor),0);
+    const rFremIdx=rHelFjor>0?Math.round(rFrem/rHelFjor*100):null;
+    const rFaktCls=rFaktiskIdx===null?'neu':rFaktiskIdx>=100?'up':'down';
+    const rFremCls=rFremIdx===null?'neu':rFremIdx>=100?'up':'down';
+    h+=`<tr><td><span class="rest-nm"><span class="dot" style="background:${r.c}"></span>${r.name}</span></td>
+      <td style="">${kr(rNu)}</td>
+      <td>${kr(rFjorTilDato)}</td>
+      <td class="${rFaktCls}">${rFaktiskIdx!==null?rFaktiskIdx+' '+(rFaktiskIdx>=100?'▲':'▼'):'—'}</td>
+      <td>${kr(Math.round(rDgns))}</td>
+      <td style="font-weight:600;color:var(--omar)">${kr(rFrem)}</td>
+      <td>${kr(rHelFjor)}</td>
+      <td class="${rFremCls}" style="color:var(--muted);font-style:italic">${rFremIdx!==null?rFremIdx+' est.':'—'}</td>
+    </tr>`;
+  }
+  h+=`<tr class="sum"><td>Total</td>
+    <td>${kr(maanedOmsNu)}</td>
+    <td>${kr(maanedFjor)}</td>
+    <td class="${faktiskIdx!==null?(faktiskIdx>=100?'up':'down'):'neu'}">${faktiskIdx!==null?faktiskIdx+' '+(faktiskIdx>=100?'▲':'▼'):'—'}</td>
+    <td>${kr(Math.round(dagsgns))}</td>
+    <td style="font-weight:700">${kr(fremskrevet)}</td>
+    <td>${kr(helMaanedFjor)}</td>
+    <td class="${fremskrivIdx!==null?(fremskrivIdx>=100?'up':'down'):'neu'}" style="font-style:italic">${fremskrivIdx!==null?fremskrivIdx+' est.':'—'}</td>
+  </tr></tbody></table></div>`;
+
+  document.getElementById('v-dag').innerHTML=h;
+}
+
+// ── UGE VIEW ─────────────────────────────────────────────
+function bygUge() {
+  const idag=ls(0); const uger=[];
+  for (let i=0;i<10;i++) {
+    const fra=man(-7*i), tilD=new Date(fra+'T12:00:00'); tilD.setDate(tilD.getDate()+6);
+    const til=tilD.toLocaleDateString('sv-SE'), fC=fra<ls(-89)?ls(-89):fra, tC=til>idag?idag:til;
+    const datoer=dr(fC,tC);
+    const rt={},rtF={};
+    R.forEach(r=>{ rt[r.name]=datoer.reduce((s,d)=>s+gt(d,r.name),0); rtF[r.name]=datoer.reduce((s,d)=>s+gt(d,r.name,cacheIFjor),0); });
+    const tot=R.reduce((s,r)=>s+rt[r.name],0), totF=R.reduce((s,r)=>s+rtF[r.name],0);
+    uger.push({uge:wn(fra),fra,til,datoer,rt,rtF,tot,totF,dage:datoer.length});
+  }
+  uger.reverse();
+  const dU=uger[uger.length-1], p5=uger.slice(-6,-1), sn5=p5.length?p5.reduce((s,u)=>s+u.tot,0)/p5.length:0;
+  const bedste=R.slice().sort((a,b)=>dU.rt[b.name]-dU.rt[a.name])[0];
+
+  let h=`<div class="section-title">UGE ${dU.uge} — ${dU.fra.slice(5)} → ${dU.til.slice(5)}</div>`;
+  h+=`<div class="kpi-row">
+    <div class="kpi"><div class="kpi-label">Denne uge</div><div class="kpi-value">${krF(dU.tot)}</div><div class="kpi-sub ${cls(dU.tot,sn5)}">${pct(dU.tot,sn5)} vs. gns.</div></div>
+    <div class="kpi"><div class="kpi-label">Samme uge forrige år</div><div class="kpi-value">${krF(dU.totF)}</div><div class="kpi-sub">Index vs. forrige år: <span class="${cls(dU.tot,dU.totF)}">${dU.totF?Math.round(dU.tot/dU.totF*100):'—'}</span></div></div>
+    <div class="kpi"><div class="kpi-label">Gns. de seneste 5 uger</div><div class="kpi-value">${krF(sn5)}</div></div>
+    <div class="kpi"><div class="kpi-label">Gns./dag</div><div class="kpi-value">${krF(dU.dage?dU.tot/dU.dage:0)}</div></div>
+    <div class="kpi"><div class="kpi-label">Bedste</div><div class="kpi-value" style="font-size:17px">${bedste.name}</div></div>
+  </div>`;
+
+  h+=`<div class="section-title">OMSÆTNING PR. RESTAURANT — DENNE UGE VS. GENNEMSNIT OG FORRIGE ÅR</div><div class="card"><table class="ss-tabel"><thead><tr>
+    <th>Afdeling</th><th>Denne uge</th><th>Gns. de 5 seneste uger</th><th>Difference</th><th>Index vs. gns.</th><th>Samme uge forrige år</th><th>Index vs. forrige år</th>
+  </tr></thead><tbody>`;
+  for (const r of R) {
+    const v=dU.rt[r.name], pv=p5.map(u=>u.rt[r.name]), sn=pv.length?pv.reduce((a,b)=>a+b,0)/pv.length:0;
+    const fV=dU.rtF[r.name], diff=v-sn;
+    h+=`<tr><td><span class="rest-nm"><span class="dot" style="background:${r.c}"></span>${r.name}</span></td>
+      <td style="font-weight:700">${krF(v)}</td><td>${kr(sn)}</td>
+      <td class="${diff>=0?'up':'down'}">${diff>=0?'+':''}${kr(Math.abs(diff))}</td>
+      <td>${idxHtml(v,sn)}</td><td class="${fV>0?(v>=fV?'up':'down'):'neu'}">${kr(fV)}</td><td>${idxHtml(v,fV)}</td></tr>`;
+  }
+  h+=`<tr class="sum"><td>Total</td><td>${krF(dU.tot)}</td><td>${kr(sn5)}</td>
+    <td class="${(dU.tot-sn5)>=0?'up':'down'}">${(dU.tot-sn5)>=0?'+':''}${kr(Math.abs(dU.tot-sn5))}</td>
+    <td>${idxHtml(dU.tot,sn5)}</td><td>${kr(dU.totF)}</td><td>${idxHtml(dU.tot,dU.totF)}</td>
+  </tr></tbody></table></div>`;
+
+  // Spend pr. gæst denne uge
+  const ugePax=dU.datoer?dU.datoer.reduce((s,d)=>s+paxA(d),0):0;
+  const ugeSpend=ugePax>0?Math.round(dU.tot/ugePax):0;
+  const p5Spend=p5.map(u=>{
+    const pp=u.datoer?u.datoer.reduce((s,d)=>s+paxA(d),0):0;
+    return pp>0?u.tot/pp:0;
+  }).filter(v=>v>0);
+  const snitUgeSpend=p5Spend.length?Math.round(p5Spend.reduce((a,b)=>a+b,0)/p5Spend.length):0;
+
+  h+=`<div class="kpi-row" style="margin-top:.5rem">
+    <div class="kpi"><div class="kpi-label">Gæster denne uge</div><div class="kpi-value">${ugePax||'—'}</div></div>
+    <div class="kpi"><div class="kpi-label">Spend pr. gæst</div><div class="kpi-value">${ugeSpend?ugeSpend.toLocaleString('da-DK')+' kr.':'—'}</div>
+      <div class="kpi-sub ${cls(ugeSpend,snitUgeSpend)}">${snitUgeSpend?pct(ugeSpend,snitUgeSpend)+' vs. gns.':''}</div></div>
+    <div class="kpi"><div class="kpi-label">Gns. spend (5 uger)</div><div class="kpi-value">${snitUgeSpend?snitUgeSpend.toLocaleString('da-DK')+' kr.':'—'}</div></div>
+  </div>`;
+
+  const datoGraense = ls(-89);
+  h+=`<div class="section-title">UGEOVERSIGT — SENESTE 10 UGER (omsætning, index og sammenligning)</div>
+  <div style="font-size:11px;color:var(--muted);margin-bottom:.8rem">
+    Index vs. forrige år beregnes kun for uger inden for de seneste 90 dage (fra ${datoGraense}).
+    Uger uden forrige-år data viser —
+  </div>`;
+  h+=`<div class="card"><table class="gen">
+    <thead><tr><th>Uge</th><th>Periode</th>${R.map(r=>`<th style="color:${r.c}">${r.name}</th>`).join('')}<th>Total</th><th>Gns. pr. dag</th><th>Gns. forbrug pr. gæst</th><th>Index vs. forrige år</th><th>Vs. forrige uge</th></tr></thead><tbody>`;
+  let fU=null;
+  for (const u of uger) {
+    const vs=fU&&fU.tot?pct(u.tot,fU.tot):'—', vc=fU&&fU.tot?cls(u.tot,fU.tot):'neu';
+    // Uge index: summer kun åbne dage pr. restaurant
+    // For en uge beregnes index som vægtet sum af åbne restaurant-dage
+    const uTotAabn=u.tot; // total er allerede korrekt (natlukning fixet)
+    const uFjorAabn=u.datoer?u.datoer.reduce((s,d)=>{
+      return s+aabneRestPaaDato(d).reduce((x,r)=>x+gt(d,r.name,cacheIFjor),0);
+    },0):R.reduce((s,r)=>s+u.rtF[r.name],0);
+    const idx=uFjorAabn>0?Math.round(uTotAabn/uFjorAabn*100):null;
+    const uPx=u.datoer?u.datoer.reduce((s,d)=>s+paxA(d),0):0;
+    const uSp=uPx>0?Math.round(u.tot/uPx):0;
+    h+=`<tr class="${u===dU?'hl':''}"><td>Uge ${u.uge}</td><td style="color:var(--muted);font-size:11px">${u.fra.slice(5)}→${u.til.slice(5)}</td>
+      ${R.map(r=>`<td>${kr(u.rt[r.name])}</td>`).join('')}
+      <td style="font-weight:600">${kr(u.tot)}</td><td style="color:var(--muted)">${kr(u.dage?u.tot/u.dage:0)}</td>
+      <td>${uSp?uSp.toLocaleString('da-DK')+' kr.':'—'}</td>
+      <td class="${idx===null?'neu':idx>=100?'up':'down'}">${idx!==null?idx:'—'}</td>
+      <td class="${vc}">${vs}</td></tr>`;
+    fU=u;
+  }
+  h+=`</tbody></table></div>`;
+  document.getElementById('v-uge').innerHTML=h;
+}
+
+// ── MÅNED VIEW ───────────────────────────────────────────
+async function bygMaaned() {
+  const idag=ls(0);
+
+  // Hent historisk data for måneder ældre end ~90 dage (ikke i cache endnu)
+  const gr89=ls(-89);
+  // Find ældste og nyeste måned der (delvist) mangler i cache
+  // Betingelse: måneden starter FØR gr89 (ikke fuldt dækket af hentAlt's 90-dages vindue)
+  let histFra=null, histTil=null;
+  for (let i=0;i<12;i++) {
+    const fra=mS(-i), til=i===0?idag:mE(-i);
+    if (fra < gr89) {
+      if (!histFra || fra < histFra) histFra = fra;
+      if (!histTil || til > histTil) histTil = til;
+    }
+  }
+  if (histFra) {
+    const histUrl = CONFIG.PROXY.replace('/api/sales', '/api/historical-sales');
+    try {
+      // I år
+      const respIaar = await fetch(histUrl + '?from=' + histFra + '&to=' + histTil);
+      const histIaar = await respIaar.json();
+      if (histIaar.data) {
+        for (const [dato, rests] of Object.entries(histIaar.data)) {
+          if (!cache[dato]) cache[dato] = {};
+          if (!paxCache[dato]) paxCache[dato] = {};
+          for (const [restNavn, vals] of Object.entries(rests)) {
+            cache[dato][restNavn] = vals.omsaetning;
+            paxCache[dato][restNavn] = vals.pax;
+          }
+        }
+      }
+      // Forrige år (præcis 1 år tilbage)
+      const histFraF = (() => { const d=new Date(histFra+'T12:00:00'); d.setFullYear(d.getFullYear()-1); return d.toLocaleDateString('sv-SE'); })();
+      const histTilF = (() => { const d=new Date(histTil+'T12:00:00'); d.setFullYear(d.getFullYear()-1); return d.toLocaleDateString('sv-SE'); })();
+      const respFjor = await fetch(histUrl + '?from=' + histFraF + '&to=' + histTilF);
+      const histFjor = await respFjor.json();
+      if (histFjor.data) {
+        for (const [dato, rests] of Object.entries(histFjor.data)) {
+          const ugedagNøgle = mapFjorTilIaar(dato);
+          const datoNøgle = (() => { const d=new Date(dato+'T12:00:00'); d.setFullYear(d.getFullYear()+1); return d.toLocaleDateString('sv-SE'); })();
+          if (!cacheIFjor[ugedagNøgle]) cacheIFjor[ugedagNøgle] = {};
+          if (!cacheDatoFjor[datoNøgle]) cacheDatoFjor[datoNøgle] = {};
+          for (const [restNavn, vals] of Object.entries(rests)) {
+            cacheIFjor[ugedagNøgle][restNavn] = (cacheIFjor[ugedagNøgle][restNavn]||0) + vals.omsaetning;
+            cacheDatoFjor[datoNøgle][restNavn] = vals.omsaetning;
+          }
+        }
+      }
+    } catch(e) { console.warn('bygMaaned historisk hentning fejl:', e); }
+  }
+
+  const maaneder=[];
+  for (let i=0;i<12;i++) {
+    const fra=mS(-i), til=i===0?idag:mE(-i);
+    const tC=til>idag?idag:til;
+    const datoer=dr(fra,tC);
+    const rt={},rtF={};
+    // Brug cacheDatoFjor (præcis kalendersammenligning) til månedstotaler — ikke ISO-ugedag-mapping
+    R.forEach(r=>{ rt[r.name]=datoer.reduce((s,d)=>s+gt(d,r.name),0); rtF[r.name]=datoer.reduce((s,d)=>s+gt(d,r.name,cacheDatoFjor),0); });
+    const tot=R.reduce((s,r)=>s+rt[r.name],0), totF=R.reduce((s,r)=>s+rtF[r.name],0);
+    const dd=new Date(fra+'T12:00:00');
+    maaneder.push({lbl:MNED[dd.getMonth()]+' '+dd.getFullYear(),fra,til,datoer,rt,rtF,tot,totF,dage:datoer.length});
+  }
+  maaneder.reverse();
+  const dM=maaneder[maaneder.length-1], p5=maaneder.slice(-6,-1), sn5=p5.length?p5.reduce((s,m)=>s+m.tot,0)/p5.length:0;
+  const bedste=R.slice().sort((a,b)=>dM.rt[b.name]-dM.rt[a.name])[0];
+
+  let h=`<div class="section-title">${dM.lbl.toUpperCase()} (TIL DATO)</div>`;
+  h+=`<div class="kpi-row">
+    <div class="kpi"><div class="kpi-label">Denne måned</div><div class="kpi-value">${krF(dM.tot)}</div><div class="kpi-sub ${cls(dM.tot,sn5)}">${pct(dM.tot,sn5)} vs. gns.</div></div>
+    <div class="kpi"><div class="kpi-label">Samme måned forrige år</div><div class="kpi-value">${krF(dM.totF)}</div><div class="kpi-sub">Index vs. forrige år: <span class="${cls(dM.tot,dM.totF)}">${dM.totF?Math.round(dM.tot/dM.totF*100):'—'}</span></div></div>
+    <div class="kpi"><div class="kpi-label">Gns. de seneste 5 måneder</div><div class="kpi-value">${krF(sn5)}</div></div>
+    <div class="kpi"><div class="kpi-label">Gns./dag</div><div class="kpi-value">${krF(dM.dage?dM.tot/dM.dage:0)}</div></div>
+    <div class="kpi"><div class="kpi-label">Bedste</div><div class="kpi-value" style="font-size:17px">${bedste.name}</div></div>
+  </div>`;
+
+  h+=`<div class="section-title">OMSÆTNING PR. RESTAURANT — ${dM.lbl.toUpperCase()} VS. GENNEMSNIT OG FORRIGE ÅR</div><div class="card"><table class="ss-tabel"><thead><tr>
+    <th>Afdeling</th><th>Denne måned</th><th>Gns. de 5 seneste måneder</th><th>Difference</th><th>Index vs. gns.</th><th>Samme måned forrige år</th><th>Index vs. forrige år</th>
+  </tr></thead><tbody>`;
+  for (const r of R) {
+    const v=dM.rt[r.name], pv=p5.map(m=>m.rt[r.name]), sn=pv.length?pv.reduce((a,b)=>a+b,0)/pv.length:0;
+    const fV=dM.rtF[r.name], diff=v-sn;
+    h+=`<tr><td><span class="rest-nm"><span class="dot" style="background:${r.c}"></span>${r.name}</span></td>
+      <td style="font-weight:700">${krF(v)}</td><td>${kr(sn)}</td>
+      <td class="${diff>=0?'up':'down'}">${diff>=0?'+':''}${kr(Math.abs(diff))}</td>
+      <td>${idxHtml(v,sn)}</td><td class="${fV>0?(v>=fV?'up':'down'):'neu'}">${kr(fV)}</td><td>${idxHtml(v,fV)}</td></tr>`;
+  }
+  h+=`<tr class="sum"><td>Total</td><td>${krF(dM.tot)}</td><td>${kr(sn5)}</td>
+    <td class="${(dM.tot-sn5)>=0?'up':'down'}">${(dM.tot-sn5)>=0?'+':''}${kr(Math.abs(dM.tot-sn5))}</td>
+    <td>${idxHtml(dM.tot,sn5)}</td><td>${kr(dM.totF)}</td><td>${idxHtml(dM.tot,dM.totF)}</td>
+  </tr></tbody></table></div>`;
+
+  h+=`<div class="section-title">MÅNEDSOVERSIGT — SENESTE 12 MÅNEDER (omsætning, index og sammenligning)</div>`;
+  h+=`<div class="card"><table class="gen">
+    <thead><tr>
+      <th>Måned</th>
+      ${R.map(r=>`<th style="color:${r.c}">${r.name}</th><th style="color:${r.c};opacity:.6;font-size:10px">${r.name} fjor</th>`).join('')}
+      <th>Total</th><th>Fjor total</th><th>Gns. forbrug pr. gæst</th><th>Index vs. forrige år</th><th>Vs. forrige måned</th>
+    </tr></thead><tbody>`;
+  let fM=null;
+  for (const m of maaneder) {
+    const vs=fM&&fM.tot?pct(m.tot,fM.tot):'—', vc=fM&&fM.tot?cls(m.tot,fM.tot):'neu';
+    // Index: brug cacheDatoFjor-totalen (m.totF) direkte — korrekt kalendersammenligning
+    const idx=m.totF>0?Math.round(m.tot/m.totF*100):null;
+    const mPx=m.datoer?m.datoer.reduce((s,d)=>s+paxA(d),0):0;
+    const mSp=mPx>0?Math.round(m.tot/mPx):0;
+    h+=`<tr class="${m===dM?'hl':''}"><td>${m.lbl}</td>
+      ${R.map(r=>{
+        const v=m.rt[r.name], fV=m.rtF[r.name];
+        const pil=fV>0?(v>=fV?' <span style="color:var(--good);font-size:10px">▲</span>':' <span style="color:var(--bad);font-size:10px">▼</span>'):'';
+        return `<td style="font-weight:600">${kr(v)}${pil}</td><td style="font-size:11px;color:var(--muted)">${fV>0?kr(fV):'—'}</td>`;
+      }).join('')}
+      <td style="font-weight:700">${kr(m.tot)}</td>
+      <td style="font-size:11px;color:var(--muted)">${m.totF>0?kr(m.totF):'—'}</td>
+      <td>${mSp?mSp.toLocaleString('da-DK')+' kr.':'—'}</td>
+      <td class="${idx===null?'neu':idx>=100?'up':'down'}">${idx!==null?idx:'—'}</td>
+      <td class="${vc}">${vs}</td></tr>`;
+    fM=m;
+  }
+  // Sumrækker
+  const sumRt={}, sumRtF={};
+  R.forEach(r=>{ sumRt[r.name]=maaneder.reduce((s,m)=>s+m.rt[r.name],0); sumRtF[r.name]=maaneder.reduce((s,m)=>s+m.rtF[r.name],0); });
+  const sumTot=maaneder.reduce((s,m)=>s+m.tot,0), sumTotF=maaneder.reduce((s,m)=>s+m.totF,0);
+  h+=`<tr class="sum"><td>Total 12 mdr.</td>
+    ${R.map(r=>`<td style="font-weight:600">${kr(sumRt[r.name])}</td><td style="font-size:11px;color:var(--muted)">${kr(sumRtF[r.name])}</td>`).join('')}
+    <td style="font-weight:700">${kr(sumTot)}</td><td style="font-size:11px;color:var(--muted)">${kr(sumTotF)}</td>
+    <td>—</td><td>${idxHtml(sumTot,sumTotF)}</td><td>—</td></tr>`;
+  h+=`</tbody></table></div>`;
+  document.getElementById('v-maaned').innerHTML=h;
+}
+
+// ── RESTAURANT DAG-FOR-DAG VIEW ──────────────────────────
+async function bygRestView(restNavn, farve, viewId) {
+  const rest = R.find(r=>r.name===restNavn);
+  if(!rest) return;
+
+  const idag = ls(0);
+  const igaar = ls(-1);
+
+  // Byg månedsvælger — seneste 6 måneder
+  const maaneder = [];
+  for(let i=0;i<6;i++){
+    const fra=mS(-i);
+    const d=new Date(fra+'T12:00:00');
+    maaneder.push({
+      val: fra,
+      lbl: MNED[d.getMonth()]+' '+d.getFullYear()
+    });
+  }
+
+  // Hent valgt måned fra state eller brug indeværende
+  const stateKey = 'rv_maaned_'+viewId;
+  const valgtMaaned = window[stateKey] || mS(0);
+
+  // Byg UI
+  const maanedOpts = maaneder.map(m=>
+    `<option value="${m.val}" ${m.val===valgtMaaned?'selected':''}>${m.lbl}</option>`
+  ).join('');
+
+  let h = `<div class="rv-header">
+    <div class="rv-name">
+      <span class="dot" style="background:${farve};width:12px;height:12px"></span>
+      ${restNavn}
+    </div>
+    <select class="maaned-select" onchange="window['${stateKey}']=this.value; bygRestView('${restNavn}','${farve}','${viewId}')">
+      ${maanedOpts}
+    </select>
+  </div>`;
+
+  // KPI-bjælke for valgt måned
+  const mFra = valgtMaaned;
+  const mSlut = new Date(new Date(mFra+'T12:00:00').getFullYear(), new Date(mFra+'T12:00:00').getMonth()+1, 0);
+  const mTil = mSlut.toLocaleDateString('sv-SE');
+  // Guard: hvis valgt måned er helt i fremtiden
+  if (mFra > idag) {
+    document.getElementById('v-'+viewId).innerHTML = `<div style="padding:3rem;text-align:center;color:var(--muted)">
+      <div style="font-size:48px;margin-bottom:1rem">📅</div>
+      <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:.5rem">Ingen data endnu</div>
+      <div style="font-size:13px">Vælg en måned der allerede er startet for at se omsætningsdata.</div>
+    </div>`;
+    return;
+  }
+
+  // ── HENT DATA FØR KPI BEREGNES ─────────────────────────────
+  // 1. Salg denne måned
+  try {
+    const manglerSalg = dr(mFra, mTil > idag ? idag : mTil)
+      .filter(d => !cache[d] || !cache[d][restNavn]);
+    if (manglerSalg.length > 0) {
+      const salesUrl = CONFIG.PROXY.replace('/api/sales','/api/historical-sales')
+        + '?from=' + mFra + '&to=' + (mTil > idag ? idag : mTil);
+      const sResp = await fetch(salesUrl);
+      const sData = await sResp.json();
+      if (sData.data) {
+        for (const [dato, rests] of Object.entries(sData.data)) {
+          if (!cache[dato]) cache[dato] = {};
+          if (!paxCache[dato]) paxCache[dato] = {};
+          for (const [rn, vals] of Object.entries(rests)) {
+            cache[dato][rn] = vals.omsaetning;
+            paxCache[dato][rn] = vals.pax;
+          }
+        }
+      }
+    }
+  } catch(e) { console.warn('Salg månedsfetch fejl:', e); }
+
+  // 2. Salg samme ugedag forrige år (til cacheIFjor) — hent ±8 dage bredere for ISO-uge-kanten
+  try {
+    const manglerFjor = dr(mFra, mTil)
+      .filter(d => !cacheIFjor[d] || !cacheIFjor[d][restNavn]);
+    if (manglerFjor.length > 0) {
+      // Find fetch-range: kortlæg hele måneden til forrige år og udvid ±8 dage
+      const fjorFraD = new Date(mapIaarTilFjor(mFra)+'T12:00:00'); fjorFraD.setDate(fjorFraD.getDate()-8);
+      const fjorTilD = new Date(mapIaarTilFjor(mTil)+'T12:00:00'); fjorTilD.setDate(fjorTilD.getDate()+8);
+      const fjorFra = fjorFraD.toLocaleDateString('sv-SE');
+      const fjorTil = fjorTilD.toLocaleDateString('sv-SE');
+      const fjorUrl = CONFIG.PROXY.replace('/api/sales','/api/historical-sales')
+        + '?from=' + fjorFra + '&to=' + fjorTil;
+      const fResp = await fetch(fjorUrl);
+      const fData = await fResp.json();
+      if (fData.data) {
+        for (const [dato, rests] of Object.entries(fData.data)) {
+          const ugedagKey = mapFjorTilIaar(dato);
+          const datoKey = (() => { const d=new Date(dato+'T12:00:00'); d.setFullYear(d.getFullYear()+1); return d.toLocaleDateString('sv-SE'); })();
+          if (!cacheIFjor[ugedagKey]) cacheIFjor[ugedagKey] = {};
+          if (!cacheDatoFjor[datoKey]) cacheDatoFjor[datoKey] = {};
+          for (const [rn, vals] of Object.entries(rests)) {
+            cacheIFjor[ugedagKey][rn] = vals.omsaetning;
+            cacheDatoFjor[datoKey][rn] = vals.omsaetning;
+          }
+        }
+      }
+    }
+  } catch(e) { console.warn('Forrige år salg fejl:', e); }
+
+  // 3. Reservationsdata denne måned
+  try {
+    const manglerDatoer = dr(mFra, mTil > idag ? idag : mTil)
+      .filter(d => !easyCache[d] || !easyCache[d][restNavn]);
+    if (manglerDatoer.length > 0) {
+      const resUrl = CONFIG.PROXY.replace('/api/sales','/api/reservationer')
+        + '?from=' + mFra + '&to=' + (mTil > idag ? idag : mTil);
+      const etResp = await fetch(resUrl);
+      const etData = await etResp.json();
+      if (etData.restauranter) {
+        for (const [rn, datoer] of Object.entries(etData.restauranter)) {
+          for (const [dato, data] of Object.entries(datoer)) {
+            if (!easyCache[dato]) easyCache[dato] = {};
+            easyCache[dato][rn] = data;
+          }
+        }
+      }
+    }
+  } catch(e) { console.warn('Reservationer månedsfetch fejl:', e); }
+  // ───────────────────────────────────────────────────────────
+
+  const mDatoer = dr(mFra, mTil > idag ? idag : mTil);
+  const mTotal = mDatoer.reduce((s,d)=>s+gt(d,restNavn),0);
+  const mTotalFjor = mDatoer.reduce((s,d)=>s+gt(d,restNavn,cacheIFjor),0);
+  const mPax = mDatoer.reduce((s,d)=>s+etG(d,restNavn),0);
+  const mSpend = mPax>0?Math.round(mTotal/mPax):0;
+  const helMaanedFjorDatoer = dr(mFra, mTil);
+  const helMaanedFjor = helMaanedFjorDatoer.reduce((s,d)=>s+gt(d,restNavn,cacheIFjor),0);
+  // Faktisk index: til dato vs. forrige år til dato (fair sammenligning)
+  const mIdx = mTotalFjor>0?Math.round(mTotal/mTotalFjor*100):null;
+
+  // Fremskrivning
+  const dageGaet = mDatoer.length;
+  const dageTot = mSlut.getDate();
+  const dageTilbage = Math.max(0, dageTot - dageGaet);
+  const dagsgns = dageGaet>0?mTotal/dageGaet:0;
+  const fremskrevet = Math.round(mTotal + dagsgns*dageTilbage);
+  // Fremskrevet index: estimat vs. hel måned forrige år
+  const fremIdx = helMaanedFjor>0?Math.round(fremskrevet/helMaanedFjor*100):null;
+
+  // Easytable: gæster i dag for denne restaurant
+  const etRestIdag = easyCache[idag]?.[restNavn]?.gaester||0;
+  const etRestPrev = [1,2,3,4,5].map(w=>{
+    const d=new Date(idag+'T12:00:00'); d.setDate(d.getDate()-7*w);
+    return easyCache[d.toLocaleDateString('sv-SE')]?.[restNavn]?.gaester||0;
+  }).filter(v=>v>0);
+  const etRestGns = etRestPrev.length?Math.round(etRestPrev.reduce((a,b)=>a+b,0)/etRestPrev.length):0;
+  const etRestIdxCls = etRestGns>0?(etRestIdag>=etRestGns?'up':'down'):'neu';
+  const etRestPct = etRestGns>0?((etRestIdag-etRestGns)/etRestGns*100):null;
+
+  h += `<div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">Omsætning til dato</div>
+      <div class="kpi-value">${krF(mTotal)}</div>
+      <div class="kpi-sub">${dageGaet} af ${dageTot} dage</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Samme periode forrige år</div>
+      <div class="kpi-value">${krF(mTotalFjor)}</div>
+      <div class="kpi-sub">Hel måned: ${kr(helMaanedFjor)}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Faktisk index vs. forrige år (til dato)</div>
+      <div class="kpi-value ${mIdx!==null?(mIdx>=100?'up':'down'):'neu'}">${mIdx!==null?mIdx:'—'}</div>
+      <div class="kpi-sub">${mIdx!==null?(mIdx>=100?'✓ Over forrige år til dato':'↓ Under forrige år til dato'):''}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Fremskrevet slutresultat (estimat)</div>
+      <div class="kpi-value">${krF(fremskrevet)}</div>
+      <div class="kpi-sub ${fremIdx!==null?(fremIdx>=100?'up':'down'):'neu'}">Fremskrevet index: ${fremIdx!==null?fremIdx+' (estimat)':'—'}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Gæster til dato (reserveret)</div>
+      <div class="kpi-value">${mPax||'—'}</div>
+      <div class="kpi-sub">Forbrug/gæst: ${mSpend?mSpend.toLocaleString('da-DK')+' kr.':'—'}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Gæster i dag (reserveret)</div>
+      <div class="kpi-value ${etRestIdxCls}">${etRestIdag||'—'}</div>
+      <div class="kpi-sub ${etRestIdxCls}">${etRestPct!==null?(etRestPct>=0?'+':'')+etRestPct.toFixed(1)+'% vs. gns.':etRestGns?'Gns: '+etRestGns:''}</div>
+    </div>
+  </div>`;
+
+  // Dag-for-dag tabel
+  h += `<div class="card"><table class="rv">
+    <thead><tr>
+      <th>Dag</th>
+      <th>Dato</th>
+      <th>Ugedag</th>
+      <th>Salg</th>
+      <th>Akkumuleret omsætning</th>
+      <th>Samme ugedag forrige år</th>
+      <th>Samme dato forrige år</th>
+      <th>Index vs. forrige år</th>
+      <th>Akkumuleret forrige år</th>
+      <th>Akkumuleret index ift. forrige år</th>
+      <th>+/- vs. forrige år</th>
+      <th>Gæster (res.)</th>
+      <th>Spend/gæst</th>
+    </tr></thead><tbody>`;
+
+  // Generer alle dage i valgt måned
+  const alleDatoer = dr(mFra, mTil);
+  let akkSalg = 0, akkFjor = 0, akkUgedagFjor = 0, akkDatoFjor = 0;
+  let ugeNr = null, ugeSalg = 0, ugeFjor = 0, ugeDatoer = [];
+  let dagNr = 0;
+
+  for(let i=0; i<alleDatoer.length; i++){
+    const dato = alleDatoer[i];
+    const erFremtid = dato > idag;
+    const erIdag = dato === idag;
+    const erIgaar = dato === igaar;
+    const d = new Date(dato+'T12:00:00');
+    const dagUgeNr = wn(dato);
+    const ugedagNr = d.getDay()===0?7:d.getDay(); // 1=man, 7=søn
+
+    // Ugeskifte — vis ugeoversigt INDEN ny uge
+    if(ugeNr !== null && dagUgeNr !== ugeNr){
+      const ugeIdx = ugeFjor>0?Math.round(ugeSalg/ugeFjor*100):null;
+      const ugeIdxCls = ugeIdx===null?'neu':ugeIdx>=100?'up':'down';
+      h+=`<tr class="uge-sum">
+        <td colspan="3" style="color:#8888bb">↳ Uge ${ugeNr} — total</td>
+        <td>${kr(ugeSalg)}</td>
+        <td></td>
+        <td>${kr(ugeFjor)}</td>
+        <td></td>
+        <td class="${ugeIdxCls}">${ugeIdx!==null?ugeIdx+' '+(ugeIdx>=100?'▲':'▼'):'—'}</td>
+        <td></td><td></td>
+        <td class="${ugeSalg>=ugeFjor?'up':'down'}">${ugeFjor?(ugeSalg>=ugeFjor?'+':'')+kr(Math.abs(ugeSalg-ugeFjor)):'—'}</td>
+        <td></td><td></td>
+      </tr>`;
+      ugeSalg=0; ugeFjor=0; ugeDatoer=[];
+    }
+    ugeNr = dagUgeNr;
+
+    dagNr++;
+    const salg = erFremtid ? null : gt(dato, restNavn);
+    const fjorSalg = gt(dato, restNavn, cacheIFjor);
+    const datoFjorSalg = gt(dato, restNavn, cacheDatoFjor);
+
+    // Beregn præcis ugedag forrige år til tooltip (ISO-uge mapping)
+    const fjorDato = mapIaarTilFjor(dato);
+    const fjorDatoStr = new Date(fjorDato+'T12:00:00').toLocaleDateString('da-DK',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    // Kalender-dato forrige år til tooltip
+    const kalDatoFjor = fjor(dato);
+    const kalDatoFjorStr = new Date(kalDatoFjor+'T12:00:00').toLocaleDateString('da-DK',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+    if(!erFremtid && salg>0){ akkSalg+=salg; }
+    if(!erFremtid){ akkFjor+=fjorSalg||0; }
+    if(fjorSalg>0){ akkUgedagFjor+=fjorSalg; }
+    if(datoFjorSalg>0){ akkDatoFjor+=datoFjorSalg; }
+    if(!erFremtid && salg>0){ ugeSalg+=salg; }
+    if(!erFremtid){ ugeFjor+=fjorSalg||0; }
+
+    const idx = salg!==null&&salg>0&&fjorSalg>0?Math.round(salg/fjorSalg*100):null;
+    // Akkumuleret index: akkSalg fryser fast, akkUgedagFjor vokser hele måneden
+    // → viser worst-case index hvis ingen mere salg resten af måneden
+    const akkIdx = akkUgedagFjor>0?Math.round(akkSalg/akkUgedagFjor*100):null;
+    const mangler = fjorSalg>0&&salg>0?salg-fjorSalg:null;
+    const dagPax = erFremtid?null:etG(dato,restNavn);
+    const dagSpend = dagPax>0&&salg?Math.round(salg/dagPax):null;
+
+    const rowCls = erIdag?'today-row':(erFremtid?'fremtid':'');
+
+    h+=`<tr class="${rowCls}">
+      <td style="color:var(--muted)">${dagNr}</td>
+      <td style="color:var(--muted);font-size:11px">${dato.slice(5)}</td>
+      <td style="color:var(--muted)">${DAGE[d.getDay()]}</td>
+      <td style="font-weight:600">${salg>0?kr(salg)+(fjorSalg>0?(salg>=fjorSalg?' <span style="color:var(--good);font-size:10px">▲</span>':' <span style="color:var(--bad);font-size:10px">▼</span>'):''):'—'}</td>
+      <td>${salg>0?kr(akkSalg):'—'}</td>
+      <td class="${salg!==null&&fjorSalg>0?(salg>=fjorSalg?'up':'down'):'neu'}" title="${fjorSalg>0?fjorDatoStr:''}" style="cursor:${fjorSalg>0?'help':'default'}">${kr(fjorSalg)}</td>
+      <td class="${datoFjorSalg>0?'neu':''}" title="${datoFjorSalg>0?kalDatoFjorStr:''}" style="cursor:${datoFjorSalg>0?'help':'default'};color:var(--muted)">${kr(datoFjorSalg)}</td>
+      <td class="${idx===null?'neu':idx>=100?'up':'down'}" title="${idx!==null?'Index: '+idx+' — sammenligner med '+fjorDatoStr:''}">${idx!==null?idx+' '+(idx>=100?'▲':'▼'):'—'}</td>
+      <td style="color:var(--muted)" title="${akkFjor>0?'Akkumuleret forrige år til og med '+fjorDatoStr:''}">${kr(akkFjor)}</td>
+      <td class="${akkIdx===null?'neu':akkIdx>=100?'up':'down'}" style="${erFremtid?'opacity:0.45;font-style:italic':''}" title="${erFremtid&&akkIdx!==null?'Worst-case index hvis ingen salg resten af måneden':''}">
+        ${akkIdx!==null?akkIdx+(akkIdx>=100?' ▲':' ▼'):'—'}</td>
+      <td class="${mangler===null?'neu':mangler>=0?'up':'down'}">${mangler!==null?(mangler>=0?'+':'')+kr(Math.abs(mangler)):'—'}</td>
+      <td style="color:var(--muted)">${dagPax||'—'}</td>
+      <td style="color:var(--muted)">${dagSpend?dagSpend.toLocaleString('da-DK')+' kr.':'—'}</td>
+    </tr>`;
+  }
+
+  // Sidste ugeoversigt
+  if(ugeNr !== null && ugeSalg+ugeFjor>0){
+    const ugeIdx = ugeFjor>0?Math.round(ugeSalg/ugeFjor*100):null;
+    const ugeIdxCls = ugeIdx===null?'neu':ugeIdx>=100?'up':'down';
+    h+=`<tr class="uge-sum">
+      <td colspan="3">Uge ${ugeNr}</td>
+      <td>${kr(ugeSalg)}</td><td></td>
+      <td>${kr(ugeFjor)}</td>
+      <td></td>
+      <td class="${ugeIdxCls}">${ugeIdx!==null?ugeIdx+' '+(ugeIdx>=100?'▲':'▼'):'—'}</td>
+      <td></td><td></td>
+      <td class="${ugeSalg>=ugeFjor?'up':'down'}">${ugeFjor?(ugeSalg>=ugeFjor?'+':'')+kr(Math.abs(ugeSalg-ugeFjor)):'—'}</td>
+      <td></td><td></td>
+    </tr>`;
+  }
+
+  // Total-række
+  const totalIdx = akkFjor>0?Math.round(akkSalg/akkFjor*100):null;
+  const totalMangler = akkSalg-akkFjor;
+  const totalPax = mDatoer.reduce((s,d)=>s+etG(d,restNavn),0);
+  const totalSpend = totalPax>0?Math.round(akkSalg/totalPax):0;
+  h+=`<tr style="font-weight:700;border-top:2px solid rgba(0,0,0,.10);background:rgba(0,0,0,.03)">
+    <td colspan="3">TOTAL</td>
+    <td style="">${kr(akkSalg)}</td>
+    <td></td>
+    <td style="color:var(--muted);font-weight:700">${kr(akkUgedagFjor)}</td>
+    <td style="color:var(--muted);font-weight:700">${kr(akkDatoFjor)}</td>
+    <td class="${totalIdx===null?'neu':totalIdx>=100?'up':'down'}">${totalIdx!==null?totalIdx+' '+(totalIdx>=100?'▲':'▼'):'—'}</td>
+    <td></td><td></td>
+    <td class="${totalMangler>=0?'up':'down'}">${akkFjor?(totalMangler>=0?'+':'')+kr(Math.abs(totalMangler)):'—'}</td>
+    <td style="color:var(--muted)">${totalPax||'—'}</td>
+    <td style="color:var(--muted)">${totalSpend?totalSpend.toLocaleString('da-DK')+' kr.':'—'}</td>
+  </tr>`;
+
+  h+=`</tbody></table></div>`;
+
+  document.getElementById('v-'+viewId).innerHTML=h;
+}
+
+
+function bR(v,mx,c,lbl,cur) {
+  const p=Math.round((v||0)/mx*100);
+  return `<div class="bar-row ${cur?'cur':''}">
+    <span class="bl">${lbl}</span>
+    <div class="bt"><div class="bf" style="width:${p}%;background:${cur?c:c+'55'}"></div></div>
+    <span class="bv">${v?Math.round(v).toLocaleString('da-DK')+' kr.':'—'}</span>
+  </div>`;
+}
+</script>
+</body>
+</html>

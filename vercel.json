@@ -1,0 +1,30 @@
+{
+  "headers": [
+    {
+      "source": "/",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
+      ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/weekly-report",
+      "schedule": "0 7 * * 1"
+    },
+    {
+      "path": "/api/sync-supabase",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/sync-supabase",
+      "schedule": "0 8 * * *"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+RewriteEngine On
+RewriteRule ^$ https://omar-dashboard-seven.vercel.app/ [R=301,L]
+RewriteRule ^(.*)$ https://omar-dashboard-seven.vercel.app/$1 [R=301,L]
