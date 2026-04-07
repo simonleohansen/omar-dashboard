@@ -1,7 +1,7 @@
 # ──────────────────────────────────────────────────────────────
 # daily-sync.yml — Daglig synkronisering af salgsdata til Supabase
 #
-# Kører kl. 06:00 og 09:00 dansk tid (UTC+2 om sommeren = 04:00 og 07:00 UTC)
+# Kører kl. 04:00 og 06:00 dansk tid (UTC+2 om sommeren = 02:00 og 04:00 UTC)
 # Kalder /api/sync-supabase som henter data fra OnlinePOS og gemmer i Supabase.
 # Catch-up mekanisme i API'en sørger for at fylde eventuelle huller (op til 5 dage).
 # ──────────────────────────────────────────────────────────────
@@ -10,10 +10,10 @@ name: Daglig salgsdata-sync
 
 on:
   schedule:
-    # Kl. 06:00 dansk sommertid (04:00 UTC)
+    # Kl. 04:00 dansk sommertid (02:00 UTC) — tidligst mulige sync
+    - cron: '0 2 * * *'
+    # Kl. 06:00 dansk sommertid (04:00 UTC) — backup-kørsel
     - cron: '0 4 * * *'
-    # Kl. 09:00 dansk sommertid (07:00 UTC) — backup-kørsel
-    - cron: '0 7 * * *'
   # Tillad manuel kørsel fra GitHub Actions-fanen
   workflow_dispatch:
 
