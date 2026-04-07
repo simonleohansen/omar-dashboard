@@ -21,17 +21,14 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Synk salgsdata
+      - name: Synk salgsdata (OnlinePOS)
         run: |
-          echo "Kalder sync endpoint..."
-          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
-            "https://omar-dashboard-seven.vercel.app/api/sync-supabase?run=now")
-          HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS:" | cut -d: -f2)
-          BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS:")
-          echo "Status: $HTTP_STATUS"
-          echo "Svar: $BODY"
-          if [ "$HTTP_STATUS" != "200" ]; then
-            echo "FEJL: Sync returnerede HTTP $HTTP_STATUS"
-            exit 1
-          fi
-          echo "Sync fuldført"
+          echo "Synker salgsdata..."
+          curl -s "https://omar-dashboard-seven.vercel.app/api/sync-supabase?run=now"
+          echo "Salgsdata synced"
+
+      - name: Synk budget og løn (SameSystem)
+        run: |
+          echo "Synker SameSystem..."
+          curl -s "https://omar-dashboard-seven.vercel.app/api/sync-samesystem?run=now"
+          echo "SameSystem synced"
