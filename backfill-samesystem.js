@@ -113,21 +113,27 @@ async function main() {
         const to = `${year}-${String(qEnd).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
 
         try {
-          const data = await ssGet(`/${rest.ctx}/export/worktime?from=${from}&to=${to}`);
-          const entries = Array.isArray(data) ? data : [];
+          const calData = await ssGet(`/${rest.ctx}/export/calendar?start_date=${from}&end_date=${to}&salary=true&bonuses=true`);
+          const entries = Array.isArray(calData) ? calData : [];
 
-          // Aggreger pr. dato
           const daglig = {};
           for (const e of entries) {
-            const dato = e.Date;
+            const deptNr = e.department?.nr || '';
+            if (deptNr.toLowerCase() !== rest.name.toLowerCase()) continue;
+            const dato = e.date;
             if (!dato || dato < from || dato > to) continue;
-            const salary = parseFloat(e.Salary || '0') || 0;
-            const hours = parseFloat(e.Hours || '0') || 0;
-            if (salary <= 0) continue;
+            const cost = parseFloat(e.cost) || 0;
+            if (cost <= 0) continue;
+            let hours = 0;
+            for (const w of (e.events?.work || [])) {
+              const h = w.total_hours?.without_breaks || '0:00';
+              const [hh, mm] = h.split(':').map(Number);
+              hours += (hh || 0) + (mm || 0) / 60;
+            }
             if (!daglig[dato]) daglig[dato] = { loen: 0, timer: 0, medarbejdere: new Set() };
-            daglig[dato].loen += salary;
+            daglig[dato].loen += cost;
             daglig[dato].timer += hours;
-            daglig[dato].medarbejdere.add(e['Salary number'] || e['User name']);
+            daglig[dato].medarbejdere.add(e.user?.id || e.user?.name);
           }
 
           for (const [dato, d] of Object.entries(daglig)) {

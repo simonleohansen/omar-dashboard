@@ -164,7 +164,7 @@ async function main() {
         const sales = await hentSalgChunk(rest, ch.from, ch.to);
         for (const item of sales) {
           const l = item.line || item;
-          // Restaurantdag: salg kl. 00:00-01:59 tilhører dagen før
+          // Restaurantdag: salg kl. 00:00-01:59 tilhører dagen før (matcher kasserapport)
           const hh = parseInt((l.time || '').split(':')[0]) || 0;
           let datStr = l.date || '';
           if (hh < 2) {

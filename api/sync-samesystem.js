@@ -21,12 +21,12 @@ async function ssLogin() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      email: process.env.SAMESYSTEM_EMAIL,
-      password: process.env.SAMESYSTEM_PASSWORD,
+      email: (process.env.SAMESYSTEM_EMAIL || '').trim(),
+      password: (process.env.SAMESYSTEM_PASSWORD || '').trim(),
     }),
   });
   const data = await r.json();
-  if (data.status !== 'ok') throw new Error('SameSystem login fejl');
+  if (data.status !== 'ok') throw new Error('SameSystem login fejl: ' + JSON.stringify(data) + ' email=' + (process.env.SAMESYSTEM_EMAIL || 'MISSING') + ' pw_len=' + (process.env.SAMESYSTEM_PASSWORD || '').length);
   return data.token;
 }
 
@@ -81,31 +81,38 @@ export default async function handler(req, res) {
         try {
           const bData = await ssGet(token, `/${rest.ctx}/budget/daily/${year}/${month}`);
           for (const b of (bData.daily_budgets || [])) {
-            if (b.amount > 0) {
-              allBudget.push({ dato: b.date, restaurant: rest.name, budget: Math.round(b.amount * 100) / 100 });
-            }
+            allBudget.push({ dato: b.date, restaurant: rest.name, budget: Math.round((b.amount || 0) * 100) / 100 });
           }
         } catch {}
 
-        // Løn
+        // Løn via export/calendar (inkl. tillæg og bonusser)
         try {
           const lastDay = new Date(year, month, 0).getDate();
           const from = `${year}-${String(month).padStart(2, '0')}-01`;
           const to = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-          const wData = await ssGet(token, `/${rest.ctx}/export/worktime?from=${from}&to=${to}`);
-          const entries = Array.isArray(wData) ? wData : [];
+          const calData = await ssGet(token, `/${rest.ctx}/export/calendar?start_date=${from}&end_date=${to}&salary=true&bonuses=true`);
+          const entries = Array.isArray(calData) ? calData : [];
 
           const daglig = {};
           for (const e of entries) {
-            const dato = e.Date;
+            // Filtrér til denne restaurant via department.nr
+            const deptNr = e.department?.nr || '';
+            if (deptNr.toLowerCase() !== rest.name.toLowerCase()) continue;
+            const dato = e.date;
             if (!dato || dato < from || dato > to) continue;
-            const salary = parseFloat(e.Salary || '0') || 0;
-            const hours = parseFloat(e.Hours || '0') || 0;
-            if (salary <= 0) continue;
+            const cost = parseFloat(e.cost) || 0;
+            if (cost <= 0) continue;
+            // Beregn timer fra work events
+            let hours = 0;
+            for (const w of (e.events?.work || [])) {
+              const h = w.total_hours?.without_breaks || '0:00';
+              const [hh, mm] = h.split(':').map(Number);
+              hours += (hh || 0) + (mm || 0) / 60;
+            }
             if (!daglig[dato]) daglig[dato] = { loen: 0, timer: 0, ids: new Set() };
-            daglig[dato].loen += salary;
+            daglig[dato].loen += cost;
             daglig[dato].timer += hours;
-            daglig[dato].ids.add(e['Salary number'] || e['User name']);
+            daglig[dato].ids.add(e.user?.id || e.user?.name);
           }
           for (const [dato, d] of Object.entries(daglig)) {
             allLoen.push({
